@@ -17,7 +17,8 @@ def index():
 def getUsuarios():
     conn = get_db_connection()
     cursor = conn.cursor()
-    resultset = cursor.execute('SELECT * FROM tb_usuario').fetchall()
+    cursor.execute('SELECT * FROM tb_usuario')
+    resultset = cursor.fetchall()
     usuarios = []
     for linha in resultset:
         id = linha[0]
@@ -42,9 +43,10 @@ def setUsuario(data):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        f'INSERT INTO tb_usuario(nome, nascimento) values ("{nome}", "{nascimento}")')
+        "INSERT INTO tb_usuario (nome, nascimento) VALUES (%s, %s) RETURNING id", (nome, nascimento)
+    )
     conn.commit()
-    id = cursor.lastrowid
+    id = cursor.fetchone()[0]
     data['id'] = id
     conn.close()
     # Retornar o usuário criado.
@@ -68,8 +70,8 @@ def getUsuarioById(id):
     usuarioDict = None
     conn = get_db_connection()
     cursor = conn.cursor()
-    linha = cursor.execute(
-        f'SELECT * FROM tb_usuario WHERE id = {id}').fetchone()
+    cursor.execute(f'SELECT * FROM tb_usuario WHERE id = {id}')
+    linha = cursor.fetchone()
     if linha is not None:
         id = linha[0]
         nome = linha[1]
@@ -93,7 +95,8 @@ def updateUsuario(id, data):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        'UPDATE tb_usuario SET nome = ?, nascimento = ? WHERE id = ?', (nome, nascimento, id))
+        'UPDATE tb_usuario SET nome = %s, nascimento = %s WHERE id = %s', (nome, nascimento, id)
+    )
     conn.commit()
 
     rowupdate = cursor.rowcount
